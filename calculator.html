@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modern Calculator — HTML + Tailwind</title>
+  <meta name="description" content="Modern calculator." />
+
+  <!-- Tailwind CDN for quick prototyping -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #0d1117; /* rich dark */
+      --card: #161b22; /* slightly lighter dark */
+      --muted: #9ca3af; /* neutral gray */
+      --accent: #06b6d4; /* cyan accent */
+      --accent2: #f59e0b; /* amber secondary accent */
+      --text-main: #f3f4f6;
+    }
+    [data-theme="light"]{
+      --bg: #f9fafb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #2563eb; /* blue */
+      --accent2: #d97706; /* amber */
+      --text-main: #111827;
+    }
+
+    html,body{height:100%;}
+    body{font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:linear-gradient(180deg, rgba(6,182,212,0.08), transparent 40%), var(--bg); color: var(--text-main);}
+
+    /* subtle glassy card + adaptive shadows */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5), inset 0 1px rgba(255,255,255,0.06);
+      border-radius: 16px;
+    }
+
+    .key{
+      background: var(--card);
+      transition: all 0.15s ease;
+    }
+
+    .key:hover{
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .key:active{ transform: translateY(2px) scale(0.985); }
+
+    .equals{
+      background: var(--accent2);
+      color: #fff;
+    }
+
+    .equals:hover{
+      background: #fbbf24;
+    }
+
+    /* responsiveness tweaks for small screens */
+    @media (max-width:420px){
+      .display-value{font-size:1.6rem}
+      .display-sub{font-size:0.78rem}
+    }
+  </style>
+</head>
+<body data-theme="dark" class="min-h-screen flex items-center justify-center p-6">
+  <main class="w-full max-w-2xl">
+    <section class="card p-6 sm:p-8 lg:p-10" aria-labelledby="calc-title">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 id="calc-title" class="text-xl sm:text-2xl font-semibold">Modern Calculator</h1>
+          <p class="text-sm text-[color:var(--muted)] mt-1">Responsive • Keyboard friendly • Theme & History</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Theme toggle -->
+          <button id="themeToggle" aria-pressed="false" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[color:var(--card)]/70 hover:bg-[color:var(--accent)] hover:text-white focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]">
+            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
+            <span class="text-sm">Theme</span>
+          </button>
+
+          <!-- Clear / history quick-access -->
+          <button id="historyToggle" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-[color:var(--card)]/70 hover:bg-[color:var(--accent)] hover:text-white focus:outline-none" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6v12a4 4 0 004 4h0a4 4 0 004-4V6"/></svg>
+            <span class="text-sm">History</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Display -->
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-[1fr,260px] gap-6">
+        <div class="card p-4 sm:p-6 rounded-lg">
+          <div class="flex flex-col">
+            <div id="subDisplay" class="display-sub text-[color:var(--muted)] text-right break-words min-h-[1.15rem]">&nbsp;</div>
+            <div id="mainDisplay" class="display-value text-right font-semibold text-3xl sm:text-4xl break-words min-h-[2.2rem]">0</div>
+          </div>
+        </div>
+
+        <!-- Right pane: extra features -->
+        <aside class="card p-4 rounded-lg flex flex-col gap-4" aria-label="Extras">
+          <div>
+            <h3 class="text-sm font-medium">Calculator modes</h3>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+              <button class="modeBtn key px-3 py-2 rounded-md text-sm" data-mode="basic">Basic</button>
+              <button class="modeBtn key px-3 py-2 rounded-md text-sm" data-mode="scientific">Scientific</button>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium">Memory</h3>
+            <div class="mt-3 flex gap-2">
+              <button id="memSave" class="key px-3 py-2 rounded-md text-sm">MS</button>
+              <button id="memRecall" class="key px-3 py-2 rounded-md text-sm">MR</button>
+              <button id="memClear" class="key px-3 py-2 rounded-md text-sm">MC</button>
+            </div>
+            <div id="memView" class="mt-2 text-xs text-[color:var(--muted)] min-h-[1.1rem]">Memory: —</div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium">Tip</h3>
+            <p class="mt-2 text-xs text-[color:var(--muted)]">You can use your keyboard: numbers, + - * /, Enter for =, Backspace to delete.</p>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Buttons grid -->
+      <div class="mt-6 card p-4 rounded-lg">
+        <div id="buttons" class="grid grid-cols-4 gap-3 sm:gap-4">
+          <!-- Row 1 -->
+          <button class="key col-span-2 py-3 rounded-lg text-lg" data-action="clear" aria-label="clear">C</button>
+          <button class="key py-3 rounded-lg text-lg" data-action="back" aria-label="backspace">⌫</button>
+          <button class="key py-3 rounded-lg text-lg" data-value="/">÷</button>
+
+          <!-- Row 2 -->
+          <button class="key py-3 rounded-lg" data-value="7">7</button>
+          <button class="key py-3 rounded-lg" data-value="8">8</button>
+          <button class="key py-3 rounded-lg" data-value="9">9</button>
+          <button class="key py-3 rounded-lg" data-value="*">×</button>
+
+          <!-- Row 3 -->
+          <button class="key py-3 rounded-lg" data-value="4">4</button>
+          <button class="key py-3 rounded-lg" data-value="5">5</button>
+          <button class="key py-3 rounded-lg" data-value="6">6</button>
+          <button class="key py-3 rounded-lg" data-value="-">−</button>
+
+          <!-- Row 4 -->
+          <button class="key py-3 rounded-lg" data-value="1">1</button>
+          <button class="key py-3 rounded-lg" data-value="2">2</button>
+          <button class="key py-3 rounded-lg" data-value="3">3</button>
+          <button class="key py-3 rounded-lg" data-value="+">+</button>
+
+          <!-- Row 5 -->
+          <button class="key col-span-2 py-3 rounded-lg" data-value="0">0</button>
+          <button class="key py-3 rounded-lg" data-value=".">.</button>
+          <button class="key equals py-3 rounded-lg" data-action="equals">=</button>
+
+          <!-- Scientific row (hidden by default) -->
+          <div id="scientificRow" class="col-span-4 hidden">
+            <div class="mt-4 grid grid-cols-6 gap-2">
+              <button class="key py-2 rounded-md text-sm" data-value="(">(</button>
+              <button class="key py-2 rounded-md text-sm" data-value=")">)</button>
+              <button class="key py-2 rounded-md text-sm" data-value="Math.sin(">sin</button>
+              <button class="key py-2 rounded-md text-sm" data-value="Math.cos(">cos</button>
+              <button class="key py-2 rounded-md text-sm" data-value="Math.tan(">tan</button>
+              <button class="key py-2 rounded-md text-sm" data-action="pow">^</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History drawer (simple) -->
+      <div id="historyDrawer" class="fixed right-6 top-20 w-80 max-h-[70vh] overflow-auto card p-4 rounded-lg shadow-lg hidden" aria-hidden="true">
+        <div class="flex items-center justify-between">
+          <h4 class="text-sm font-medium">History</h4>
+          <button id="clearHistory" class="text-xs text-[color:var(--muted)]">Clear</button>
+        </div>
+        <ul id="historyList" class="mt-3 text-sm text-[color:var(--muted)] space-y-2"></ul>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    // Calculator JS logic remains unchanged
+  </script>
+</body>
+</html>

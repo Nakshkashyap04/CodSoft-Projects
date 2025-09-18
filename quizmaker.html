@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuizCraft — Online Quiz Maker (Tailwind UI Prototype)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Single-file prototype: Online Quiz Maker with responsive UI, quiz creation, taking, results, listings, and demo auth." />
+  <style>
+    /* small customizations */
+    .glass { background: rgba(255,255,255,0.75); backdrop-filter: blur(6px) saturate(120%); }
+    .card-shadow { box-shadow: 0 8px 30px rgba(2,6,23,0.08); }
+    :focus { outline: 3px solid rgba(99,102,241,0.18); outline-offset: 2px; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    /* tiny confetti canvas overlay */
+    #confetti { position: fixed; pointer-events: none; inset: 0; z-index: 60; }
+  </style>
+</head>
+<body class="font-sans bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-100">
+
+<header class="sticky top-0 z-40 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-b dark:border-slate-800">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="#home" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-indigo-600 text-white grid place-items-center font-bold">QC</div>
+        <div class="hidden sm:block">
+          <div class="font-semibold">QuizCraft</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400">Create • Share • Assess</div>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-4">
+        <a href="#list" class="text-sm hover:underline">Quizzes</a>
+        <a href="#create" class="text-sm hover:underline">Create</a>
+        <a href="#analytics" class="text-sm hover:underline">Analytics</a>
+        <button id="newQuizBtn" class="px-3 py-1 rounded-md bg-emerald-600 text-white text-sm">New Quiz</button>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" class="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Toggle theme">🌙</button>
+        <div id="authArea"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+  <!-- HOME / HERO -->
+  <section id="home" class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+    <div class="lg:col-span-2">
+      <div class="glass rounded-2xl p-8 card-shadow border">
+        <h1 class="text-3xl font-bold">Build beautiful quizzes in seconds</h1>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Create multiple-choice, true/false, and short-answer quizzes. Share links, gather responses, and view instant results.</p>
+
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="homeSearch" placeholder="Search quizzes or tags" class="px-4 py-3 rounded-md border sm:col-span-2" />
+          <button id="homeSearchBtn" class="px-4 py-3 rounded-md bg-indigo-600 text-white">Search</button>
+        </div>
+
+        <div class="mt-6 flex gap-3 flex-wrap">
+          <div class="px-3 py-2 bg-slate-100 rounded-md text-sm">Timer</div>
+          <div class="px-3 py-2 bg-slate-100 rounded-md text-sm">Progress Bar</div>
+          <div class="px-3 py-2 bg-slate-100 rounded-md text-sm">Auto-grading</div>
+          <div class="px-3 py-2 bg-slate-100 rounded-md text-sm">Shareable Links</div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button id="startCreateBtn" class="px-5 py-3 rounded-md bg-emerald-600 text-white font-semibold">Create a Quiz</button>
+          <a href="#list" class="text-sm text-slate-600 hover:underline">Or browse public quizzes</a>
+        </div>
+      </div>
+
+      <!-- quick features cards -->
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+          <h4 class="font-semibold">Auto-grading</h4>
+          <p class="text-sm text-slate-500 mt-1">Multiple choice & true/false are graded automatically with instant feedback.</p>
+        </div>
+        <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+          <h4 class="font-semibold">Timed quizzes</h4>
+          <p class="text-sm text-slate-500 mt-1">Set a duration per quiz — the timer shows progress and auto-submits when time runs out.</p>
+        </div>
+        <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+          <h4 class="font-semibold">Simple analytics</h4>
+          <p class="text-sm text-slate-500 mt-1">See overall pass rate, average score, and question-level difficulty instantly.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- right column preview / CTA -->
+    <aside class="hidden lg:block">
+      <div class="rounded-xl p-4 bg-gradient-to-b from-indigo-600 to-emerald-500 text-white card-shadow">
+        <h3 class="font-semibold">Pro tip</h3>
+        <p class="text-sm mt-1">Use short, clear questions and 3–5 distractors for MCQs. Add explanations to help learners after they finish.</p>
+        <div class="mt-4">
+          <button id="demoTakeBtn" class="px-4 py-2 bg-white text-indigo-600 rounded-md font-semibold">Try sample quiz</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- QUIZ LISTING -->
+  <section id="list" class="mt-10">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold">Quizzes</h2>
+      <div class="text-sm text-slate-500" id="quizCount"></div>
+    </div>
+
+    <div id="quizzesGrid" class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+  <!-- QUIZ CREATION -->
+  <section id="create" class="mt-10">
+    <div class="glass rounded-2xl p-6 card-shadow border">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Create / Edit Quiz</h3>
+        <div class="text-sm text-slate-500">Autosaves locally</div>
+      </div>
+
+      <form id="quizForm" class="mt-4 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input id="quizTitle" placeholder="Quiz title" class="col-span-2 rounded-md px-3 py-2 border" required />
+          <input id="quizTags" placeholder="Tags (comma separated)" class="rounded-md px-3 py-2 border" />
+        </div>
+
+        <div class="flex gap-3">
+          <label class="flex items-center gap-2"><input id="enableTimer" type="checkbox" /> <span class="text-sm">Enable timer</span></label>
+          <input id="quizDuration" type="number" min="1" value="10" class="w-24 rounded-md px-3 py-2 border" />
+          <select id="quizVisibility" class="rounded-md px-3 py-2 border">
+            <option value="public">Public</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+
+        <div>
+          <h4 class="font-semibold">Questions</h4>
+          <div id="questionsList" class="mt-3 space-y-3"></div>
+          <div class="mt-3 flex gap-2">
+            <button type="button" id="addMCQ" class="px-3 py-2 rounded-md border">Add MCQ</button>
+            <button type="button" id="addTF" class="px-3 py-2 rounded-md border">Add True/False</button>
+            <button type="button" id="addShort" class="px-3 py-2 rounded-md border">Add Short Answer</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="saveQuiz" type="button" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Save Quiz</button>
+          <button id="publishQuiz" type="button" class="px-4 py-2 bg-emerald-600 text-white rounded-md">Publish</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- QUIZ TAKING / PLAYER (rendered) -->
+  <section id="play" class="mt-10 hidden">
+    <div class="glass rounded-2xl p-6 card-shadow border">
+      <div class="flex items-center justify-between">
+        <h3 id="playTitle" class="text-lg font-semibold">Quiz title</h3>
+        <div class="flex items-center gap-3">
+          <div id="timerWrap" class="text-sm text-slate-600">Time: <span id="timeLeft">--:--</span></div>
+          <div class="w-48 bg-slate-100 h-2 rounded overflow-hidden">
+            <div id="timeBar" class="h-2 bg-emerald-500 w-0"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="questionArea" class="mt-6"></div>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-sm text-slate-500" id="progressText"></div>
+        <div class="flex gap-2">
+          <button id="prevQ" class="px-3 py-2 rounded-md border">Prev</button>
+          <button id="nextQ" class="px-3 py-2 rounded-md border">Next</button>
+          <button id="submitQuiz" class="px-3 py-2 rounded-md bg-indigo-600 text-white">Submit</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ RESULT -->
+  <section id="result" class="mt-10 hidden">
+    <div class="glass rounded-2xl p-6 card-shadow border">
+      <h3 class="text-2xl font-bold" id="resultScore">You scored 0 / 0</h3>
+      <p id="resultSummary" class="text-sm text-slate-600 mt-2">Summary</p>
+
+      <div id="resultAnalytics" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+          <h4 class="font-semibold">Question breakdown</h4>
+          <div id="breakdownList" class="mt-3"></div>
+        </div>
+        <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+          <h4 class="font-semibold">Quick insights</h4>
+          <div id="insights" class="mt-3 text-sm text-slate-600"></div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-3">
+        <button id="retakeBtn" class="px-4 py-2 rounded-md border">Retake</button>
+        <button id="backToListBtn" class="px-4 py-2 rounded-md bg-indigo-600 text-white">Back to quizzes</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS (demo) -->
+  <section id="analytics" class="mt-10">
+    <div class="rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border">
+      <h3 class="font-semibold">Platform analytics</h3>
+      <div class="mt-3 text-sm text-slate-500">Average score across published quizzes and recent activity (demo data).</div>
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-md bg-slate-50 dark:bg-slate-700">
+          <div class="text-xs text-slate-500">Avg score</div>
+          <div class="text-2xl font-bold" id="avgScore">—</div>
+        </div>
+        <div class="p-4 rounded-md bg-slate-50 dark:bg-slate-700">
+          <div class="text-xs text-slate-500">Pass rate</div>
+          <div class="text-2xl font-bold" id="passRate">—</div>
+        </div>
+        <div class="p-4 rounded-md bg-slate-50 dark:bg-slate-700">
+          <div class="text-xs text-slate-500">Quizzes published</div>
+          <div class="text-2xl font-bold" id="publishedCount">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- small auth modal -->
+<div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/40" onclick="closeAuth()"></div>
+  <div class="relative w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl p-6 card-shadow border">
+    <button class="absolute right-4 top-4" onclick="closeAuth()">✕</button>
+    <h3 class="text-lg font-semibold" id="authTitle">Sign in</h3>
+    <form id="authForm" class="mt-4 space-y-3">
+      <input id="authEmail" placeholder="Email" class="w-full rounded-md px-3 py-2 border" required />
+      <input id="authName" placeholder="Display name (signup only)" class="w-full rounded-md px-3 py-2 border hidden" />
+      <div class="flex gap-2">
+        <button id="authSignIn" type="button" class="flex-1 px-3 py-2 rounded-md bg-indigo-600 text-white">Sign in</button>
+        <button id="authToggle" type="button" class="flex-1 px-3 py-2 rounded-md border">Switch to sign up</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+// --- Simple single-file prototype logic ---
+// Data stores in localStorage: users, quizzes, sessions, responses (demo)
+
+// helper
+const uid = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+// demo sample quiz
+const SAMPLE_QUIZ = {
+  id: uid(), title: 'Sample: JS Basics', tags: ['javascript','frontend'], visibility: 'public', duration: 5, timerEnabled: true,
+  questions: [
+    { id: uid(), type: 'mcq', q: 'Which company created JavaScript?', choices: ['Microsoft','Netscape','Google','Apple'], answer: 1, explanation: 'Netscape originally.' },
+    { id: uid(), type: 'tf', q: 'HTML stands for HyperText Markup Language.', answer: true },
+    { id: uid(), type: 'short', q: 'Name a primitive data type in JS.', answer: '' }
+  ]
+};
+
+// storage helpers
+const db = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){return null;} },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+if (!db.get('quizzes')) db.set('quizzes', [SAMPLE_QUIZ]);
+if (!db.get('users')) db.set('users', []);
+
+let state = {
+  currentQuiz: null, currentIndex: 0, answers: {}, timer: null, timeLeft: 0, sessionUser: db.get('sessionUser') || null
+};
+
+// UI refs
+const quizzesGrid = document.getElementById('quizzesGrid');
+const quizCount = document.getElementById('quizCount');
+const quizForm = document.getElementById('quizForm');
+const questionsList = document.getElementById('questionsList');
+const startCreateBtn = document.getElementById('startCreateBtn');
+const newQuizBtn = document.getElementById('newQuizBtn');
+const demoTakeBtn = document.getElementById('demoTakeBtn');
+const homeSearchBtn = document.getElementById('homeSearchBtn');
+const homeSearch = document.getElementById('homeSearch');
+const authArea = document.getElementById('authArea');
+
+function renderAuthArea(){
+  const user = db.get('sessionUser');
+  authArea.innerHTML = '';
+  if (user) {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex items-center gap-2';
+    wrap.innerHTML = `<div class="text-sm">Hi, ${user.name||user.email}</div><button id=signOutBtn class='px-3 py-1 rounded-md border text-sm'>Sign out</button>`;
+    authArea.appendChild(wrap);
+    document.getElementById('signOutBtn').addEventListener('click', ()=>{ db.set('sessionUser', null); renderAuthArea(); });
+  } else {
+    authArea.innerHTML = `<button id='openAuthBtn' class='px-3 py-1 rounded-md border text-sm'>Sign in</button>`;
+    document.getElementById('openAuthBtn').addEventListener('click', openAuth);
+  }
+}
+renderAuthArea();
+
+// list quizzes
+function renderQuizzes(filter=''){
+  const quizzes = (db.get('quizzes')||[]).filter(q=> q.visibility==='public' || (db.get('sessionUser') && q.owner === db.get('sessionUser').email));
+  const out = quizzes.filter(q => (q.title+ (q.tags||[]).join(' ')).toLowerCase().includes(filter.toLowerCase()));
+  quizzesGrid.innerHTML = '';
+  out.forEach(q=>{
+    const el = document.createElement('article');
+    el.className = 'rounded-xl p-4 bg-white dark:bg-slate-800 card-shadow border';
+    el.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h4 class="font-semibold">${q.title}</h4>
+          <div class="text-xs text-slate-500 mt-1">${q.tags? q.tags.join(', '):''}</div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-medium">${q.questions.length} Qs</div>
+          <div class="text-xs text-slate-500">${q.visibility}</div>
+        </div>
+      </div>
+      <p class="mt-3 text-sm text-slate-600 line-clamp-3">${(q.description||'No description.')}</p>
+      <div class="mt-4 flex items-center gap-2">
+        <button class='px-3 py-1 border takeBtn' data-id='${q.id}'>Take</button>
+        <button class='px-3 py-1 border editBtn' data-id='${q.id}'>Edit</button>
+        <button class='px-3 py-1 border shareBtn' data-id='${q.id}'>Share</button>
+      </div>
+    `;
+    quizzesGrid.appendChild(el);
+  });
+  quizCount.textContent = `${out.length} quizzes`;
+}
+renderQuizzes();
+
+// create / edit handlers
+let editingQuiz = null;
+function openCreate(quiz=null){
+  document.getElementById('create').scrollIntoView({behavior:'smooth'});
+  editingQuiz = quiz; // null => new
+  questionsList.innerHTML = '';
+  document.getElementById('quizTitle').value = quiz ? quiz.title : '';
+  document.getElementById('quizTags').value = quiz ? (quiz.tags||[]).join(',') : '';
+  document.getElementById('enableTimer').checked = quiz ? !!quiz.timerEnabled : true;
+  document.getElementById('quizDuration').value = quiz ? (quiz.duration||10) : 10;
+  document.getElementById('quizVisibility').value = quiz ? quiz.visibility : 'public';
+  (quiz? quiz.questions : []).forEach(q=> addQuestionCard(q));
+}
+
+function addQuestionCard(data){
+  const id = data?.id || uid();
+  const wrapper = document.createElement('div');
+  wrapper.className = 'p-3 rounded-md border bg-slate-50 dark:bg-slate-700';
+  wrapper.dataset.id = id;
+  wrapper.innerHTML = `
+    <div class='flex items-center justify-between'>
+      <div class='flex items-center gap-2'>
+        <select class='qtype rounded-md px-2 py-1 border'>
+          <option value='mcq'>MCQ</option>
+          <option value='tf'>True/False</option>
+          <option value='short'>Short</option>
+        </select>
+        <input class='qtext flex-1 rounded-md px-2 py-1 border' placeholder='Question text' />
+      </div>
+      <div class='flex gap-2'>
+        <button class='saveQ px-2 py-1 rounded-md border'>⋯</button>
+        <button class='delQ px-2 py-1 rounded-md border'>Delete</button>
+      </div>
+    </div>
+    <div class='qbody mt-2'></div>
+  `;
+
+  const qtype = wrapper.querySelector('.qtype');
+  const qtext = wrapper.querySelector('.qtext');
+  const qbody = wrapper.querySelector('.qbody');
+
+  function renderBody(type, d){
+    if(type==='mcq'){
+      qbody.innerHTML = `
+        <div class='choices space-y-2'>
+          ${(d?.choices||['','']).map((c,i)=>`<div class='flex items-center gap-2'><input class='choiceText flex-1 rounded-md px-2 py-1 border' value='${c||''}' placeholder='Choice ${i+1}'/><label class='flex items-center gap-1 text-sm'><input type='radio' name='ans_${id}' ${d && d.answer===i? 'checked':''}/> correct</label></div>`).join('')}
+        </div>
+        <div class='mt-2 flex gap-2'><button class='addChoice px-2 py-1 rounded-md border'>Add choice</button><input class='explanation px-2 py-1 rounded-md border flex-1' placeholder='Explanation (optional)' value='${d?.explanation||''}'/></div>
+      `;
+    } else if(type==='tf'){
+      qbody.innerHTML = `
+        <div class='flex items-center gap-3'>
+          <label class='flex items-center gap-2'><input type='radio' name='ans_${id}' value='true' ${d?.answer===true?'checked':''}/> True</label>
+          <label class='flex items-center gap-2'><input type='radio' name='ans_${id}' value='false' ${d?.answer===false?'checked':''}/> False</label>
+        </div>
+        <input class='explanation mt-2 px-2 py-1 rounded-md border w-full' placeholder='Explanation (optional)' value='${d?.explanation||''}' />
+      `;
+    } else {
+      qbody.innerHTML = `<input class='shortAnswer mt-2 px-2 py-1 rounded-md border w-full' placeholder='Correct answer (optional)' value='${d?.answer||''}'/>`;
+    }
+  }
+
+  qtype.addEventListener('change', ()=> renderBody(qtype.value));
+  wrapper.querySelector('.delQ').addEventListener('click', ()=> wrapper.remove());
+  wrapper.querySelector('.addChoice')?.addEventListener('click', ()=> { const c = document.createElement('div'); c.className='flex items-center gap-2'; c.innerHTML = `<input class='choiceText flex-1 rounded-md px-2 py-1 border' placeholder='Choice'/><label class='flex items-center gap-1 text-sm'><input type='radio' name='ans_${id}'/> correct</label>`; wrapper.querySelector('.choices').appendChild(c); });
+
+  renderBody(data?.type || 'mcq', data);
+  if (data) { qtype.value = data.type; qtext.value = data.q; }
+  questionsList.appendChild(wrapper);
+}
+
+// buttons
+startCreateBtn.addEventListener('click', ()=> openCreate());
+newQuizBtn.addEventListener('click', ()=> openCreate());
+demoTakeBtn.addEventListener('click', ()=> {
+  // find sample and open player
+  const q = (db.get('quizzes')||[])[0]; openPlayer(q.id);
+});
+
+// add question buttons
+document.getElementById('addMCQ').addEventListener('click', ()=> addQuestionCard({type:'mcq', choices:['',''], answer:0}));
+document.getElementById('addTF').addEventListener('click', ()=> addQuestionCard({type:'tf'}));
+document.getElementById('addShort').addEventListener('click', ()=> addQuestionCard({type:'short'}));
+
+// save/publish
+document.getElementById('saveQuiz').addEventListener('click', ()=> saveQuiz(false));
+document.getElementById('publishQuiz').addEventListener('click', ()=> saveQuiz(true));
+
+function saveQuiz(publish){
+  const title = document.getElementById('quizTitle').value.trim();
+  if (!title) return alert('Title required');
+  const tags = document.getElementById('quizTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const timerEnabled = document.getElementById('enableTimer').checked;
+  const duration = Number(document.getElementById('quizDuration').value) || 10;
+  const visibility = document.getElementById('quizVisibility').value;
+
+  const qnodes = [...questionsList.children];
+  const questions = qnodes.map(node=>{
+    const type = node.querySelector('.qtype').value;
+    const qtext = node.querySelector('.qtext').value;
+    if (type==='mcq'){
+      const choices = [...node.querySelectorAll('.choiceText')].map(i=>i.value);
+      const radios = [...node.querySelectorAll(`input[type=radio][name^=ans_]`)];
+      let answer = radios.findIndex(r=>r.checked);
+      if (answer<0) answer = 0;
+      const explanation = node.querySelector('.explanation')?.value || '';
+      return { id: node.dataset.id, type, q: qtext, choices, answer, explanation };
+    } else if(type==='tf'){
+      const radios = [...node.querySelectorAll(`input[type=radio][name^=ans_]`)];
+      const ans = radios.find(r=>r.checked)?.value === 'true';
+      const explanation = node.querySelector('.explanation')?.value || '';
+      return { id: node.dataset.id, type, q: qtext, answer: !!ans, explanation };
+    } else {
+      const ans = node.querySelector('.shortAnswer')?.value || '';
+      return { id: node.dataset.id, type, q: qtext, answer: ans };
+    }
+  });
+
+  let quizzes = db.get('quizzes') || [];
+  if (editingQuiz){
+    const idx = quizzes.findIndex(z=>z.id===editingQuiz.id);
+    quizzes[idx] = { ...quizzes[idx], title, tags, timerEnabled, duration, visibility, questions };
+  } else {
+    const qobj = { id: uid(), owner: db.get('sessionUser')?.email || null, title, tags, timerEnabled, duration, visibility, questions };
+    quizzes.push(qobj);
+  }
+  db.set('quizzes', quizzes);
+  renderQuizzes();
+  alert(publish? 'Quiz published':'Saved locally');
+}
+
+// list action handlers (delegation)
+quizzesGrid.addEventListener('click', e=>{
+  if (e.target.matches('.takeBtn')) openPlayer(e.target.dataset.id);
+  if (e.target.matches('.editBtn')){
+    const q = (db.get('quizzes')||[]).find(x=>x.id===e.target.dataset.id);
+    if (!db.get('sessionUser')) return openAuth();
+    if (q.owner && q.owner !== db.get('sessionUser').email) return alert('Only owners can edit in demo.');
+    openCreate(q);
+  }
+  if (e.target.matches('.shareBtn')){
+    navigator.clipboard?.writeText(location.href + '#take:' + e.target.dataset.id);
+    alert('Link copied to clipboard (hash)');
+  }
+});
+
+// player
+const playSection = document.getElementById('play');
+const questionArea = document.getElementById('questionArea');
+const progressText = document.getElementById('progressText');
+const timeLeftEl = document.getElementById('timeLeft');
+const timeBar = document.getElementById('timeBar');
+
+function openPlayer(id){
+  const q = (db.get('quizzes')||[]).find(x=>x.id===id);
+  if (!q) return alert('Quiz not found');
+  state.currentQuiz = q; state.currentIndex = 0; state.answers = {};
+  document.getElementById('playTitle').textContent = q.title;
+  document.getElementById('create').classList.add('hidden');
+  document.getElementById('list').classList.add('hidden');
+  document.getElementById('home').classList.add('hidden');
+  playSection.classList.remove('hidden');
+  document.getElementById('result').classList.add('hidden');
+  renderQuestion();
+  // timer
+  if (q.timerEnabled){
+    startTimer(q.duration * 60);
+    document.getElementById('timerWrap').classList.remove('hidden');
+  } else {
+    document.getElementById('timerWrap').classList.add('hidden');
+  }
+}
+
+function renderQuestion(){
+  const q = state.currentQuiz.questions[state.currentIndex];
+  questionArea.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class='text-sm text-slate-500'>Question ${state.currentIndex+1} of ${state.currentQuiz.questions.length}</div>
+    <h4 class='mt-2 font-semibold'>${q.q}</h4>
+  `;
+  if (q.type==='mcq'){
+    const list = document.createElement('div'); list.className='mt-3 space-y-2';
+    q.choices.forEach((c,i)=>{
+      const id = 'opt_'+q.id+'_'+i;
+      const btn = document.createElement('label'); btn.className='block p-3 rounded-md border cursor-pointer';
+      btn.innerHTML = `<input type='radio' name='ans_${q.id}' ${state.answers[q.id]===i? 'checked':''}/> <span class='ml-2'>${c}</span>`;
+      btn.addEventListener('click', ()=>{ state.answers[q.id]=i; });
+      list.appendChild(btn);
+    });
+    wrap.appendChild(list);
+  } else if(q.type==='tf'){
+    const t = document.createElement('div'); t.className='mt-3 flex gap-3';
+    ['True','False'].forEach((lab, i)=>{
+      const btn = document.createElement('button'); btn.className='px-4 py-2 rounded-md border'; btn.textContent = lab;
+      btn.addEventListener('click', ()=> state.answers[q.id] = (lab==='True'));
+      t.appendChild(btn);
+    });
+    wrap.appendChild(t);
+  } else {
+    const inp = document.createElement('input'); inp.className='mt-3 w-full px-3 py-2 rounded-md border'; inp.placeholder='Your answer'; inp.value = state.answers[q.id] || '';
+    inp.addEventListener('input', ()=> state.answers[q.id] = inp.value);
+    wrap.appendChild(inp);
+  }
+  questionArea.appendChild(wrap);
+  progressText.textContent = `${state.currentIndex+1} / ${state.currentQuiz.questions.length}`;
+}
+
+document.getElementById('nextQ').addEventListener('click', ()=>{ if (state.currentIndex < state.currentQuiz.questions.length-1) { state.currentIndex++; renderQuestion(); } });
+document.getElementById('prevQ').addEventListener('click', ()=>{ if (state.currentIndex >0) { state.currentIndex--; renderQuestion(); } });
+document.getElementById('submitQuiz').addEventListener('click', ()=> submitQuiz());
+
+function submitQuiz(){
+  // grading
+  const quiz = state.currentQuiz;
+  const results = { total: quiz.questions.length, correct: 0, details: [] };
+  quiz.questions.forEach(q=>{
+    const ans = state.answers[q.id];
+    let ok = false;
+    if (q.type==='mcq') ok = (ans === q.answer);
+    if (q.type==='tf') ok = (ans === q.answer);
+    // short answers not auto-graded in prototype
+    results.details.push({ id: q.id, q: q.q, correct: ok, given: ans, explanation: q.explanation || '' });
+    if (ok) results.correct++;
+  });
+  showResult(results);
+}
+
+function showResult(results){
+  playSection.classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('resultScore').textContent = `You scored ${results.correct} / ${results.total}`;
+  document.getElementById('resultSummary').textContent = `Correct: ${results.correct}. Incorrect / subjective answers are shown below.`;
+  const breakdown = document.getElementById('breakdownList'); breakdown.innerHTML = '';
+  results.details.forEach(d=>{
+    const el = document.createElement('div'); el.className='p-2 border-b text-sm';
+    el.innerHTML = `<div class='font-medium'>${d.q}</div><div class='text-xs text-slate-500'>Your answer: ${String(d.given)}</div><div class='text-xs'>${d.correct? '<span class="text-emerald-600">Correct</span>':'<span class="text-rose-600">Incorrect</span>'}</div>${d.explanation? `<div class='mt-1 text-xs text-slate-500'>${d.explanation}</div>`: ''}`;
+    breakdown.appendChild(el);
+  });
+  // simple insights
+  document.getElementById('insights').textContent = `Percent correct: ${Math.round((results.correct/results.total)*100)}%`;
+  // confetti if >60%
+  if ((results.correct/results.total) >= 0.6) runConfetti();
+}
+
+document.getElementById('retakeBtn').addEventListener('click', ()=> openPlayer(state.currentQuiz.id));
+document.getElementById('backToListBtn').addEventListener('click', ()=>{ document.getElementById('result').classList.add('hidden'); document.getElementById('list').classList.remove('hidden'); document.getElementById('home').classList.remove('hidden'); renderQuizzes(); });
+
+// timer
+function startTimer(seconds){
+  clearInterval(state.timer);
+  state.timeLeft = seconds;
+  const total = seconds;
+  timeBar.style.width = '100%';
+  state.timer = setInterval(()=>{
+    state.timeLeft--;
+    const mm = String(Math.floor(state.timeLeft/60)).padStart(2,'0');
+    const ss = String(state.timeLeft%60).padStart(2,'0');
+    timeLeftEl.textContent = `${mm}:${ss}`;
+    const pct = Math.max(0, (state.timeLeft/total)*100);
+    timeBar.style.width = pct + '%';
+    if (state.timeLeft<=0){ clearInterval(state.timer); submitQuiz(); }
+  }, 1000);
+}
+
+// auth modal
+const authModal = document.getElementById('authModal');
+const authTitle = document.getElementById('authTitle');
+const authName = document.getElementById('authName');
+let authMode = 'signin';
+function openAuth(){ authModal.classList.remove('hidden'); }
+function closeAuth(){ authModal.classList.add('hidden'); }
+document.getElementById('authToggle').addEventListener('click', ()=>{
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  authTitle.textContent = authMode==='signin' ? 'Sign in' : 'Sign up';
+  authName.classList.toggle('hidden', authMode==='signin');
+});
+
+document.getElementById('authSignIn').addEventListener('click', ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const name = document.getElementById('authName').value.trim();
+  if (!email) return alert('Email required');
+  let users = db.get('users') || [];
+  if (authMode==='signup'){
+    users.push({ email, name }); db.set('users', users); db.set('sessionUser', { email, name });
+  } else {
+    const u = users.find(x=>x.email===email);
+    if (!u) return alert('User not found. Please sign up.');
+    db.set('sessionUser', u);
+  }
+  renderAuthArea();
+  closeAuth();
+});
+
+// simple confetti
+const confettiCanvas = document.getElementById('confetti');
+const ctx = confettiCanvas.getContext('2d');
+function resizeCanvas(){ confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; }
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+function runConfetti(){
+  const pieces = Array.from({length:120}, ()=>({ x: Math.random()*innerWidth, y: Math.random()*-innerHeight, vx:(Math.random()-0.5)*6, vy: Math.random()*4+2, r: Math.random()*6+4, c: `hsl(${Math.random()*360},70%,60%)` }));
+  let t=0; const id = setInterval(()=>{
+    t++; ctx.clearRect(0,0,innerWidth, innerHeight);
+    pieces.forEach(p=>{ p.x += p.vx; p.y += p.vy; p.vy += 0.05; ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.r, p.r); });
+    if (t>160) { clearInterval(id); ctx.clearRect(0,0,innerWidth,innerHeight); }
+  }, 16);
+}
+
+// theme toggle
+document.getElementById('themeToggle').addEventListener('click', ()=> document.documentElement.classList.toggle('dark'));
+
+// search
+homeSearchBtn.addEventListener('click', ()=> renderQuizzes(homeSearch.value));
+homeSearch.addEventListener('keydown', (e)=> { if (e.key==='Enter') renderQuizzes(homeSearch.value); });
+
+// initial visibility
+renderQuizzes();
+
+// deep link: if hash #take:id
+if (location.hash.startsWith('#take:')){
+  const id = location.hash.split(':')[1]; setTimeout(()=> openPlayer(id), 500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Brand Landing Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Navbar -->
+  <header class="bg-white shadow-md fixed w-full z-50">
+    <div class="container mx-auto flex items-center justify-between p-4">
+      <h1 class="text-2xl font-bold text-orange-600">Indian Brand</h1>
+      <nav class="hidden md:flex space-x-6">
+        <a href="#" class="hover:text-orange-600">Home</a>
+        <a href="#features" class="hover:text-green-600">Features</a>
+        <a href="#testimonials" class="hover:text-blue-600">Testimonials</a>
+        <a href="#contact" class="hover:text-orange-600">Contact</a>
+      </nav>
+      <button class="md:hidden" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">
+        <i data-feather="menu"></i>
+      </button>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+      <a href="#" class="block px-4 py-2 hover:bg-gray-100">Home</a>
+      <a href="#features" class="block px-4 py-2 hover:bg-gray-100">Features</a>
+      <a href="#testimonials" class="block px-4 py-2 hover:bg-gray-100">Testimonials</a>
+      <a href="#contact" class="block px-4 py-2 hover:bg-gray-100">Contact</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="pt-28 pb-16 bg-gradient-to-r from-orange-500 via-white to-green-500 text-gray-900">
+    <div class="container mx-auto text-center px-6">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_India.svg" alt="Indian Flag" class="mx-auto w-24 mb-6 shadow-md rounded-full">
+      <h2 class="text-4xl md:text-5xl font-bold mb-6">Build Your Dream Website</h2>
+      <p class="text-lg md:text-xl mb-8">Modern UI/UX design with TailwindCSS for startups, businesses, and creators in India.</p>
+      <a href="#features" class="bg-orange-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-orange-700 transition">Get Started</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-16">
+    <div class="container mx-auto text-center mb-12">
+      <h3 class="text-3xl font-bold mb-4 text-green-600">Features</h3>
+      <p class="text-gray-600">Everything you need to create an impressive online presence</p>
+    </div>
+    <div class="container mx-auto grid gap-8 md:grid-cols-3 px-6">
+      <div class="bg-white shadow-lg p-6 rounded-2xl hover:shadow-xl transition text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/1827/1827504.png" alt="Responsive Design" class="mx-auto w-16 mb-4">
+        <h4 class="font-semibold text-lg mb-2">Responsive Design</h4>
+        <p class="text-gray-600">Looks perfect on all devices with mobile-first design.</p>
+      </div>
+      <div class="bg-white shadow-lg p-6 rounded-2xl hover:shadow-xl transition text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/609/609361.png" alt="Fast Performance" class="mx-auto w-16 mb-4">
+        <h4 class="font-semibold text-lg mb-2">Fast Performance</h4>
+        <p class="text-gray-600">Optimized for speed to ensure smooth user experience.</p>
+      </div>
+      <div class="bg-white shadow-lg p-6 rounded-2xl hover:shadow-xl transition text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/942/942751.png" alt="Secure & Reliable" class="mx-auto w-16 mb-4">
+        <h4 class="font-semibold text-lg mb-2">Secure & Reliable</h4>
+        <p class="text-gray-600">Built with best practices for security and reliability.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section id="testimonials" class="py-16 bg-gray-100">
+    <div class="container mx-auto text-center mb-12">
+      <h3 class="text-3xl font-bold mb-4 text-blue-600">What Our Clients Say</h3>
+      <p class="text-gray-600">Trusted by startups and businesses across India</p>
+    </div>
+    <div class="container mx-auto grid gap-8 md:grid-cols-3 px-6">
+      <div class="bg-white shadow-md p-6 rounded-2xl">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Naksh Kashyap" class="w-16 h-16 mx-auto rounded-full mb-4">
+        <p class="mb-4 text-gray-600">“This landing page helped us boost conversions by 50%.”</p>
+        <h5 class="font-semibold">- Naksh Kashyap, Startup Founder</h5>
+      </div>
+      <div class="bg-white shadow-md p-6 rounded-2xl">
+        <img src="https://randomuser.me/api/portraits/men/44.jpg" alt="Sneh KR" class="w-16 h-16 mx-auto rounded-full mb-4">
+        <p class="mb-4 text-gray-600">“Beautiful design and great performance, highly recommended!”</p>
+        <h5 class="font-semibold">- Sneh KR, Business Owner</h5>
+      </div>
+      <div class="bg-white shadow-md p-6 rounded-2xl">
+        <img src="https://randomuser.me/api/portraits/men/55.jpg" alt="Aarush" class="w-16 h-16 mx-auto rounded-full mb-4">
+        <p class="mb-4 text-gray-600">“Super easy to set up and looks modern on all devices.”</p>
+        <h5 class="font-semibold">- Aarush, Freelancer</h5>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section id="contact" class="py-16 bg-gradient-to-r from-green-500 via-white to-orange-500 text-center">
+    <h3 class="text-3xl font-bold mb-4 text-gray-900">Ready to Get Started?</h3>
+    <p class="mb-6 text-gray-700">Join thousands of businesses using our solution</p>
+    <a href="#" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition">Sign Up Now</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-400 text-center py-6">
+    <p>© 2025 Naksh Kashyap. All rights reserved.</p>
+  </footer>
+
+  <script>feather.replace()</script>
+</body>
+</html>
